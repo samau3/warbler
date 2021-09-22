@@ -38,9 +38,15 @@ def add_user_to_g():
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
-
     else:
         g.user = None
+
+
+@app.before_request
+def add_csrf_form_to_g():
+    """For every form submission, make sure there's a CSRF form for the route"""
+    if CURR_USER_KEY in session:
+        g.form = OnlyCsrfForm()
 
 
 def do_login(user):
@@ -116,8 +122,6 @@ def login():
 def logout():
     """Handle logout of user."""
 
-    form = OnlyCsrfForm()
-
     if form.validate_on_submit():
         do_logout()
         flash("Logged Out.", 'success')
@@ -144,20 +148,19 @@ def list_users():
         users = User.query.all()
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
-    
-    form = OnlyCsrfForm()
 
-    return render_template('users/index.html', users=users, form=form)
+    # form = OnlyCsrfForm()
+
+    return render_template('users/index.html', users=users)
 
 
 @app.get('/users/<int:user_id>')
 def users_show(user_id):
     """Show user profile."""
 
-    form = OnlyCsrfForm()
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/show.html', user=user, form=form)
+    return render_template('users/show.html', user=user)
 
 
 @app.get('/users/<int:user_id>/following')
@@ -168,9 +171,8 @@ def show_following(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    form = OnlyCsrfForm()
     user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user, form=form)
+    return render_template('users/following.html', user=user)
 
 
 @app.get('/users/<int:user_id>/followers')
@@ -181,9 +183,8 @@ def users_followers(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    form = OnlyCsrfForm()
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user, form=form)
+    return render_template('users/followers.html', user=user)
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -222,19 +223,19 @@ def profile():
 
     # IMPLEMENT THIS
 
-    # CHECK USER ACCESS 
+    # CHECK USER ACCESS
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
-    
+
     form = EditProfileForm(obj=g.user)
 
     if form.validate_on_submit():
         user = User.authenticate(form.username.data,
                                  form.password.data)
-     
+
         if user:
-                  
+
             g.user.username = form.username.data
             g.user.email = form.email.data
             g.user.image_url = form.image_url.data
@@ -245,16 +246,13 @@ def profile():
             db.session.commit()
             flash(f"Hello, {user.username}!", "successful edit!")
 
-            
             return redirect("/")
-
-            
 
         flash("Invalid credentials.", 'danger')
 
     return render_template('users/edit.html', form=form)
-    # CREATE FORM 
-    # RENDER HTML of FORM 
+    # CREATE FORM
+    # RENDER HTML of FORM
 
 
 @app.post('/users/delete')
@@ -334,16 +332,22 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
 
-    form = OnlyCsrfForm()
 
+# get all ids for every user that g.user is following
+# x.id in x for g.user.following
+    following_ids = [user.id for user in g.user.following]
+    following_ids.append(g.user.id)
+    # breakpoint()
     if g.user:
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(following_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages, form=form)
+        # breakpoint()
+        return render_template('home.html', messages=messages)
 
     else:
         return render_template('home-anon.html')
