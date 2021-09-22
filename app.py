@@ -45,8 +45,7 @@ def add_user_to_g():
 @app.before_request
 def add_csrf_form_to_g():
     """For every form submission, make sure there's a CSRF form for the route"""
-    if CURR_USER_KEY in session: #may not only be used for logged in users
-        g.form = OnlyCsrfForm()
+    g.form = OnlyCsrfForm()
 
 
 def do_login(user):
@@ -149,8 +148,6 @@ def list_users():
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
-    # form = OnlyCsrfForm()
-
     return render_template('users/index.html', users=users)
 
 
@@ -221,11 +218,6 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    # IMPLEMENT THIS
-
-    # Need to set default image when cleared out
-
-    # CHECK USER ACCESS
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -240,11 +232,10 @@ def profile():
 
             g.user.username = form.username.data
             g.user.email = form.email.data
-            g.user.image_url = form.image_url.data
+            g.user.image_url = form.image_url.data or User.image_url.default.arg
             g.user.header_url = form.header_url.data
             g.user.bio = form.bio.data
 
-            db.session.add(user) # dont need to readd user
             db.session.commit()
             flash(f"Hello, {user.username}!", "successful edit!")
 
@@ -253,8 +244,6 @@ def profile():
         flash("Invalid credentials.", 'danger')
 
     return render_template('users/edit.html', form=form)
-    # CREATE FORM
-    # RENDER HTML of FORM
 
 
 @app.post('/users/delete')
@@ -268,16 +257,19 @@ def delete_user():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    do_logout()
-
-    db.session.delete(g.user)
-    db.session.commit()
-
-    return redirect("/signup")
-
+    if g.form.validate_on_submit():
+        Message.query.filter_by(user_id=g.user.id).delete()
+        do_logout()
+        db.session.delete(g.user)
+        db.session.commit()
+        return redirect("/signup")
+    else:
+        # didn't pass CSRF; ignore logout attempt
+        raise Unauthorized()
 
 ##############################################################################
 # Messages routes:
+
 
 @app.route('/messages/new', methods=["GET", "POST"])
 def messages_add():
@@ -336,17 +328,11 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
-    # BUG : anon users have error since no users following
 
-# get all ids for every user that g.user is following
-# x.id in x for g.user.following
-
-    if not g.user: #fail fast
+    if not g.user:
         return render_template('home-anon.html')
 
-    following_ids = [user.id for user in g.user.following]
-    following_ids.append(g.user.id) #could concat two lists
-    # breakpoint()
+    following_ids = [user.id for user in g.user.following] + [g.user.id]
     messages = (Message
                 .query
                 .filter(Message.user_id.in_(following_ids))
@@ -354,10 +340,7 @@ def homepage():
                 .limit(100)
                 .all())
 
-        # breakpoint()
     return render_template('home.html', messages=messages)
-
-
 
 
 ##############################################################################
