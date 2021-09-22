@@ -45,7 +45,7 @@ def add_user_to_g():
 @app.before_request
 def add_csrf_form_to_g():
     """For every form submission, make sure there's a CSRF form for the route"""
-    if CURR_USER_KEY in session:
+    if CURR_USER_KEY in session: #may not only be used for logged in users
         g.form = OnlyCsrfForm()
 
 
@@ -122,7 +122,7 @@ def login():
 def logout():
     """Handle logout of user."""
 
-    if form.validate_on_submit():
+    if g.form.validate_on_submit():
         do_logout()
         flash("Logged Out.", 'success')
         return redirect("/login")
@@ -223,6 +223,8 @@ def profile():
 
     # IMPLEMENT THIS
 
+    # Need to set default image when cleared out
+
     # CHECK USER ACCESS
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -242,7 +244,7 @@ def profile():
             g.user.header_url = form.header_url.data
             g.user.bio = form.bio.data
 
-            db.session.add(user)
+            db.session.add(user) # dont need to readd user
             db.session.commit()
             flash(f"Hello, {user.username}!", "successful edit!")
 
@@ -258,6 +260,9 @@ def profile():
 @app.post('/users/delete')
 def delete_user():
     """Delete user."""
+
+    # Referential Integrety; delete messages first
+    # CSRF issue; need to also validate
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -331,26 +336,28 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
-
+    # BUG : anon users have error since no users following
 
 # get all ids for every user that g.user is following
 # x.id in x for g.user.following
+
+    if not g.user: #fail fast
+        return render_template('home-anon.html')
+
     following_ids = [user.id for user in g.user.following]
-    following_ids.append(g.user.id)
+    following_ids.append(g.user.id) #could concat two lists
     # breakpoint()
-    if g.user:
-        messages = (Message
-                    .query
-                    .filter(Message.user_id.in_(following_ids))
-                    .order_by(Message.timestamp.desc())
-                    .limit(100)
-                    .all())
+    messages = (Message
+                .query
+                .filter(Message.user_id.in_(following_ids))
+                .order_by(Message.timestamp.desc())
+                .limit(100)
+                .all())
 
         # breakpoint()
-        return render_template('home.html', messages=messages)
+    return render_template('home.html', messages=messages)
 
-    else:
-        return render_template('home-anon.html')
+
 
 
 ##############################################################################
