@@ -8,29 +8,15 @@
         <div class="card-inner">
           <div class="card-contents">
             <a href="/users/{{ liked_message.user_id }}" class="card-link">
-              <img
-                src="{{ liked_message.user.image_url }}"
-                alt="Image for {{ liked_message.user.username }}"
-                class="card-image"
-              />
+              <img src="{{ liked_message.user.image_url }}" alt="Image for {{ liked_message.user.username }}"
+                class="card-image" />
               <p>@{{ liked_message.user.username }}</p>
             </a>
-            {% if g.user.is_liked(liked_message) %}
-            <form
-              method="POST"
-              action="/messages/{{ liked_message.id }}/unlike"
-            >
+            <form method="POST" action="/messages/{{ liked_message.id }}/unlike">
               <button class="btn btn-primary btn-sm">
-                <i class="far fa-star"></i>
-              </button>
-            </form>
-            {% else %}
-            <form method="POST" action="/messages/{{ liked_message.id }}/like">
-              <button class="btn btn-outline-primary btn-sm">
                 <i class="fas fa-star"></i>
               </button>
             </form>
-            {% endif %}
           </div>
           <p class="card-bio">{{ liked_message.text }}</p>
         </div>
