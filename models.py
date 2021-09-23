@@ -88,6 +88,12 @@ class User(db.Model):
         secondaryjoin=(Follows.user_being_followed_id == id)
     )
 
+    liked_message = db.relationship(
+        "Message",
+        secondary="likes",
+        backref="users"
+    )
+
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
 
@@ -170,7 +176,13 @@ class Message(db.Model):
         nullable=False,
     )
 
-    user = db.relationship('User')
+    user = db.relationship('User') 
+
+    liked_users = db.relationship(
+        "User",
+        secondary="likes",
+        backref="messages"
+    )
 
 
 def connect_db(app):
@@ -181,3 +193,31 @@ def connect_db(app):
 
     db.app = app
     db.init_app(app)
+
+
+# CREATE LIKES: 
+# Many to many relationship, 
+# Need to keep track of user.id and message.id 
+# TWO Primary keys similiar to the Follows table, same user can't like the same post twice, same user can like multiple post, and MESSAGES can be liked by multiple users
+# Need to add a new relationshipt to message AND user. 
+######### RELATIONSHIP: 
+# User has to have a r/t of likes connected to the message id
+# Message has to have a r/t of likes connected by the user id
+
+class Like(db.Model):
+    """Connection of likes by warbles users <-> warbles messages"""
+
+    __tablename__ = 'likes'
+
+    users_liking_message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+    messages_liked_by_user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('messages.id', ondelete="cascade"),
+        primary_key=True,
+    )
+

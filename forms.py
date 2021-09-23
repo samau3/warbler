@@ -41,3 +41,28 @@ class OnlyCsrfForm(FlaskForm):
     Currently used for our "delete" buttons, which make POST requests, and the
     logout button, which makes POST requests.
     """
+
+# ADDING LIKES: 
+# Each like and unlike will be a post request. 
+# Need to tie to user, and how many likes each user has 
+# Update Message displays to have like buttons, 
+
+#######################In HTML
+# Update ALL message cards to have a like button 
+# Need to include hidden tag
+# Needs to be a post  
+# Include font awesome star 
+###########PART 2 for User
+# Display on their nav bar the count of likes 
+# Need to include a link that show the LIKED messages 
+
+##################Models
+# Add likes to database 
+# Need to keep track of likes if likes or not. 
+# MESSAGE AUTHENTICATE? (class method)
+
+
+######################ROUTE 
+# Handle the like button, if it's liked or if it's not liked 
+# Need to include CSRF 
+# Need to check if message exist in database 
