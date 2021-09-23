@@ -88,7 +88,7 @@ class User(db.Model):
         secondaryjoin=(Follows.user_being_followed_id == id)
     )
 
-    liked_message = db.relationship(
+    liked_messages = db.relationship(
         "Message",
         secondary="likes",
         backref="users"
@@ -100,14 +100,23 @@ class User(db.Model):
     def is_followed_by(self, other_user):
         """Is this user followed by `other_user`?"""
 
-        found_user_list = [user for user in self.followers if user == other_user]
+        found_user_list = [
+            user for user in self.followers if user == other_user]
         return len(found_user_list) == 1
 
     def is_following(self, other_user):
         """Is this user following `other_use`?"""
 
-        found_user_list = [user for user in self.following if user == other_user]
+        found_user_list = [
+            user for user in self.following if user == other_user]
         return len(found_user_list) == 1
+
+    def is_liked(self, message):
+        """Is this message already liked by user?"""
+
+        found_message_list = [
+            messages for messages in self.liked_messages if messages == message]
+        return len(found_message_list) == 1
 
     @classmethod
     def signup(cls, username, email, password, image_url):
@@ -176,7 +185,7 @@ class Message(db.Model):
         nullable=False,
     )
 
-    user = db.relationship('User') 
+    user = db.relationship('User')
 
     liked_users = db.relationship(
         "User",
@@ -195,12 +204,12 @@ def connect_db(app):
     db.init_app(app)
 
 
-# CREATE LIKES: 
-# Many to many relationship, 
-# Need to keep track of user.id and message.id 
+# CREATE LIKES:
+# Many to many relationship,
+# Need to keep track of user.id and message.id
 # TWO Primary keys similiar to the Follows table, same user can't like the same post twice, same user can like multiple post, and MESSAGES can be liked by multiple users
-# Need to add a new relationshipt to message AND user. 
-######### RELATIONSHIP: 
+# Need to add a new relationshipt to message AND user.
+# RELATIONSHIP:
 # User has to have a r/t of likes connected to the message id
 # Message has to have a r/t of likes connected by the user id
 
@@ -220,4 +229,3 @@ class Like(db.Model):
         db.ForeignKey('messages.id', ondelete="cascade"),
         primary_key=True,
     )
-
