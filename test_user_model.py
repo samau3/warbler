@@ -8,9 +8,8 @@
 from app import app
 import os
 from unittest import TestCase
-
+from sqlalchemy import exc
 from models import db, User, Message, Follows, Like
-
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
 # before we import our app, since that will have already
@@ -35,26 +34,6 @@ db.create_all()
 
 # two test cases for validating sign up should try to use an existing username and email
 
-TEST_USER_DATA = {
-    "email": "test1@email.com",
-    "username": "test_user_1",
-    "image_url": "",
-    "header_image_url": "",
-    "bio": "test_user_bio_1",
-    "location": "test_location_1",
-    "password": "testing1"
-}
-
-TEST_USER_DATA_2 = {
-    "email": "test2@email.com",
-    "username": "test_user_2",
-    "image_url": "",
-    "header_image_url": "",
-    "bio": "test_user_bio_2",
-    "location": "test_location_2",
-    "password": "testing2"
-}
-
 
 class UserModelTestCase(TestCase):
     """Test views for messages."""
@@ -62,18 +41,28 @@ class UserModelTestCase(TestCase):
     def setUp(self):
         """Create test client, add sample data."""
 
-        User.query.delete()
         Message.query.delete()
         Follows.query.delete()
         Like.query.delete()
-
-        test_user = User(**TEST_USER_DATA)
-        db.session.add(test_user)
-        db.session.commit()
-
-        self.user = test_user
+        User.query.delete()
 
         self.client = app.test_client()
+        test_data_1 = User.signup("test_user_1",
+                                  "test1@email.com",
+                                  "testing1",
+                                  "/static/images/default-pic.png"
+                                  )
+
+        # breakpoint()
+        test_data_2 = User.signup("test_user_2",
+                                  "test2@email.com",
+                                  "testing2",
+                                  "/static/images/default-pic.png"
+                                  )
+        db.session.commit()
+
+        self.user1 = test_data_1
+        self.user2 = test_data_2
 
     def tearDown(self):
         """Clean up fouled transactions."""
@@ -100,19 +89,64 @@ class UserModelTestCase(TestCase):
         """Does user __repr__ work?"""
 
         self.assertEqual(
-            f"{self.user}",
-            f"<User #{self.user.id}: {self.user.username}, {self.user.email}>")
+            f"{self.user1}",
+            f"<User #{self.user1.id}: {self.user1.username}, {self.user1.email}>")
 
     def test_is_following(self):
         """Testing if user1 is following user2"""
 
-        test_user_2 = User(**TEST_USER_DATA_2)
-        db.session.add(test_user_2)
+        self.user1.following.append(self.user2)
         db.session.commit()
+        # breakpoint()
+        self.assertEqual(len(self.user1.following), 1)
+        self.assertEqual(len(self.user2.followers), 1)
 
-        test_user_1 = User.query.get(self.user)  # this line doesn't work
-        test_user_1.following.append(test_user_2)
+    def test_is_not_following(self):
+        """Testing if user1 is following user2"""
+
+        self.assertEqual(len(self.user1.following), 0)
+        self.assertEqual(len(self.user2.followers), 0)
+
+    def test_user_signup(self):
+        """Testing if signup with valid credentials creates a user successfully"""
+        test_data_3 = User.signup('test3',
+                                  'test3@email.com',
+                                  'testing3',
+                                  '/static/images/default-pic.png'
+                                  )
+
         db.session.commit()
-        breakpoint()
-        self.assertEqual(len(test_user_1.following), 1)
-        self.assertEqual(len(test_user_2.followers), 1)
+        self.assertEqual(test_data_3, User.query.get(test_data_3.id))
+
+    def test_existing_user_email_signup(self):
+        """Testing if signup with existing email does not create a user"""
+
+        User.signup('test3',
+                    'test1@email.com',
+                    'testing3',
+                    '/static/images/default-pic.png'
+                    )
+
+        with self.assertRaises(exc.IntegrityError):
+            db.session.commit()
+
+    def test_existing_user_username_signup(self):
+        """Testing if signup with existing username does not create a user"""
+
+        User.signup('test_user_1',
+                    'test3@email.com',
+                    'testing3',
+                    '/static/images/default-pic.png'
+                    )
+
+        with self.assertRaises(exc.IntegrityError):
+            db.session.commit()
+
+    def test_missing_arguments_signup(self):
+        """Testing if signup with missing argument does not create a user"""
+
+        with self.assertRaises(TypeError):
+            User.signup('test_user_1',
+                        'testing3',
+                        '/static/images/default-pic.png'
+                        )
