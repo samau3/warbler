@@ -54,6 +54,7 @@
           <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
           <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
           <p>{{ msg.text }}</p>
+          <!-- O(nm) situation; could use a set for O(n+m) -->
           {% if g.user.is_liked(msg) %}
           <form method="POST" action="/messages/{{ msg.id }}/unlike">
             {{ g.form.hidden_tag() }}

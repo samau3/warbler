@@ -91,7 +91,7 @@ class User(db.Model):
     liked_messages = db.relationship(
         "Message",
         secondary="likes",
-        backref="users"
+        backref="users" #need better backref; message_users_liked?
     )
 
     def __repr__(self):
@@ -115,7 +115,7 @@ class User(db.Model):
         """Is this message already liked by user?"""
 
         found_message_list = [
-            messages for messages in self.liked_messages if messages == message]
+            messages for messages in self.liked_messages if messages == message] # don't need to loop over all messages; faster way?
         return len(found_message_list) == 1
 
     @classmethod
@@ -219,7 +219,7 @@ class Like(db.Model):
 
     __tablename__ = 'likes'
 
-    users_liking_message_id = db.Column(
+    users_liking_message_id = db.Column( #call user id and message id
         db.Integer,
         db.ForeignKey('users.id', ondelete="cascade"),
         primary_key=True,
