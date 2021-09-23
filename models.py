@@ -187,11 +187,12 @@ class Message(db.Model):
 
     user = db.relationship('User')
 
-    liked_users = db.relationship(
-        "User",
-        secondary="likes",
-        backref="messages"
-    )
+    # DIDN'T need this because we ALREADY had a back reference 
+    # liked_users = db.relationship(
+    #     "User",
+    #     secondary="likes",
+    #     backref="messages"
+    # )
 
 
 def connect_db(app):

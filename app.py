@@ -183,6 +183,17 @@ def users_followers(user_id):
     user = User.query.get_or_404(user_id)
     return render_template('users/followers.html', user=user)
 
+@app.get('/users/<int:user_id>/likes')
+def users_likes(user_id):
+    """Show list of likes by a user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+    return render_template('users/liked-messages.html', user=user)
+
 
 @app.post('/users/follow/<int:follow_id>')
 def add_follow(follow_id):
@@ -267,6 +278,9 @@ def delete_user():
         # didn't pass CSRF; ignore logout attempt
         raise Unauthorized()
 
+
+
+
 ##############################################################################
 # Messages routes:
 
@@ -331,7 +345,7 @@ def message_like(message_id):
     g.user.liked_messages.append(liked_message)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/liked-messages")
+    return redirect(f"/users/{g.user.id}/likes")
 
 
 @app.post('/messages/<int:message_id>/unlike')
@@ -346,7 +360,7 @@ def message_unlike(message_id):
     g.user.liked_messages.remove(liked_message)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/liked-messages")
+    return redirect(f"/users/{g.user.id}/likes")
 
 ##############################################################################
 # Homepage and error pages
