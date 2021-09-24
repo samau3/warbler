@@ -1,7 +1,6 @@
-from app import app
+from app import app, CURR_USER_KEY
 import os
 from unittest import TestCase
-from sqlalchemy import exc
 from models import db, User, Message, Follows, Like
 
 os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
@@ -9,6 +8,7 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['TESTING'] = True
+app.config['WTF_CSRF_ENABLED'] = False
 
 
 db.drop_all()
@@ -69,19 +69,38 @@ class UserViewsTestCase(TestCase):
             self.assertEqual(resp.status_code, 200)
             self.assertIn("<h1>What's Happening?</h1>", html)
             self.assertIn('<a href="/login">Log in', html)
+    
+    def test_login(self):
+        """Test login"""
+        with app.test_client() as client:
+
+            post_data = {"username": "test_user_1", "password": "testing1"}
+            resp = client.post('/login', data=post_data, follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            # breakpoint()
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn(f'@{self.user1.username}', html)
+            self.assertIn(f'<a href="/users/{self.user1.id}">', html)
+
+    def test_logout(self):
+        """Test logout"""
+
+        with app.test_client() as client: 
+            # with client.session_transaction() as sess: 
+            # sess[CURR_USER_KEY] = self.user1.id
+            # post_data = {"username": "test_user_1", "password": "testing1"}
+            
+            resp = client.post('/logout', follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            breakpoint()
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('<h2 class="join-message">Welcome back.</h2>', html)
+          
+
 
 
     
 
 
-
-    # def test_homepage(self):
-    #     """Test user homepage without following any users"""
-    #     with app.test_client() as client:
-    #         resp = client.get('/')
-
-    #         html = resp.get_data(as_text=True)
-
-    #         self.assertEqual(resp.status_code, 200)
-    #         self.assertIn(f'@{self.user1.username}', html)
-    #         self.assertIn(f'<h4> <a href="/users/{self.user1.id}"> 1', html)

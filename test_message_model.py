@@ -14,11 +14,6 @@ app.config['TESTING'] = True
 db.drop_all()
 db.create_all()
 
-# PLANNING FOR SETTUP
-# CREATE: A user and a message in setup
-# When settup append message to user
-# 4th
-
 
 class MessageModelTestCase(TestCase):
     """Test messages model"""
