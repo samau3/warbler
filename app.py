@@ -121,8 +121,8 @@ def login():
 @app.post('/logout')
 def logout():
     """Handle logout of user."""
-
     if g.form.validate_on_submit():
+
         do_logout()
         flash("Logged Out.", 'success')
         return redirect("/login")

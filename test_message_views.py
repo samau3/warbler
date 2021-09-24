@@ -70,3 +70,20 @@ class MessageViewTestCase(TestCase):
 
             msg = Message.query.one()
             self.assertEqual(msg.text, "Hello")
+
+
+    # def test_liking_a_message(self):
+    #     """Test if a user likes a message successfully"""
+
+    #     with app.test_client() as client:
+    #         with client.session_transaction() as sess:
+    #             sess[CURR_USER_KEY] = self.user1_id
+    #         # breakpoint()
+
+    #         resp = client.post(
+    #             f'/users/follow/{self.user2_id}', follow_redirects=True)
+    #         html = resp.get_data(as_text=True)
+
+    #         # breakpoint()
+
+    #         self.assertIn(f'<form method="POST" action="/users/stop-following/{self.user2_id}"', html)    
