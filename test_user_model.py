@@ -191,7 +191,5 @@ class UserModelTestCase(TestCase):
         self.assertFalse(check_auth_2)
      
 
-
-
     
 
