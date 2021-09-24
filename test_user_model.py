@@ -97,7 +97,7 @@ class UserModelTestCase(TestCase):
 
         self.user1.following.append(self.user2)
         db.session.commit()
-        # breakpoint()
+    
         self.assertEqual(len(self.user1.following), 1)
         self.assertEqual(len(self.user2.followers), 1)
 
@@ -142,11 +142,56 @@ class UserModelTestCase(TestCase):
         with self.assertRaises(exc.IntegrityError):
             db.session.commit()
 
-    def test_missing_arguments_signup(self):
-        """Testing if signup with missing argument does not create a user"""
+    def test_null_email_signup(self):
+        """Testing if signup with null email does not create a user"""
 
-        with self.assertRaises(TypeError):
-            User.signup('test_user_1',
-                        'testing3',
-                        '/static/images/default-pic.png'
-                        )
+        User.signup('test_user_1', 
+                    None,
+                    'testing3',
+                    '/static/images/default-pic.png'
+                    )
+    
+        with self.assertRaises(exc.IntegrityError): 
+            db.session.commit()
+    
+    def test_missing_argument_signup(self):
+        """Testing if signup with a missing argument does not create a user"""
+
+        with self.assertRaises(TypeError): 
+            User.signup('test_user_1', 
+                    'testing3',
+                    '/static/images/default-pic.png'
+                    )
+    
+    def test_authentication(self):
+        """Testing if user has a valid credentials"""
+
+        check_auth = User.authenticate(self.user1.username, "testing1")
+
+        self.assertTrue(check_auth)
+    
+    def test_invalid_username(self):
+        """Testing if invalid username"""
+
+        check_auth_1 = User.authenticate("failfail", "testing1")
+        check_auth_2 = User.authenticate("124", "testing1")
+        check_auth_3 = User.authenticate(None, "testing1")
+        
+        self.assertFalse(check_auth_1)
+        self.assertFalse(check_auth_2)
+        self.assertFalse(check_auth_3)
+    
+    def test_invalid_password(self):
+        """Testing if invalid password"""
+
+        check_auth_1 = User.authenticate(self.user1.username, "testing2")
+        check_auth_2 = User.authenticate(self.user1.username, "")
+        
+        self.assertFalse(check_auth_1)
+        self.assertFalse(check_auth_2)
+     
+
+
+
+    
+
