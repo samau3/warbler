@@ -18,7 +18,8 @@ app = Flask(__name__)
 
 # Get DB_URI from environ variable (useful for production/testing) or,
 # if not set there, use development local db.
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL'].replace("postgres://", "postgresql://"))
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    os.environ['DATABASE_URL'].replace("postgres://", "postgresql://"))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
@@ -184,6 +185,7 @@ def users_followers(user_id):
     user = User.query.get_or_404(user_id)
     return render_template('users/followers.html', user=user)
 
+
 @app.get('/users/<int:user_id>/likes')
 def users_likes(user_id):
     """Show list of likes by a user."""
@@ -278,8 +280,6 @@ def delete_user():
     else:
         # didn't pass CSRF; ignore logout attempt
         raise Unauthorized()
-
-
 
 
 ##############################################################################
