@@ -1,7 +1,7 @@
 # Warbler  <img src="/static/images/warbler-logo.png" alt="logo" width="50" height="50">
 
 - An application based off of a twitter clone that utilizes Flask, PostgreSQL, WTForms, and Jinja.
-- To see live demo click [here](https://warbler-samau3.herokuapp.com/).
+- To see live demo click [here](https://warbler.fly.dev/).
 
 ## Current Features 
 - A user can login and signup if they don't have an account
